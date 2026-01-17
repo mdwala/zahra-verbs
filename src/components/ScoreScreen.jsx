@@ -53,9 +53,12 @@ const ScoreScreen = ({ score, answer, feedback, onPlayAgain }) => {
             const audio = new Audio(audioSrc);
             audio.play().catch(console.error);
             return;
+          } else {
+            const errorText = await response.text();
+            console.error(`Cloud TTS API Error (${response.status}):`, errorText);
           }
         } catch (e) {
-          console.warn('Cloud TTS failed, using browser fallback');
+          console.error('Cloud TTS System Error:', e);
         }
 
         // Fallback to browser TTS
