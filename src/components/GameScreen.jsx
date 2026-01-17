@@ -71,17 +71,38 @@ const GameScreen = ({ profile, question, onSubmitAnswer }) => {
   // Speak the question when it changes
   useEffect(() => {
     if (question) {
-      // Cancel any previous speech
-      speechSynthesis.cancel();
+      // Use Cloud TTS with browser fallback
+      const speak = async () => {
+        try {
+          // Determine API URL based on environment
+          const apiUrl = import.meta.env?.DEV ? 'http://localhost:3001/api/tts' : '/api/tts';
 
-      // Small delay to ensure previous speech is cancelled
-      const timer = setTimeout(() => {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: question }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
+            const audio = new Audio(audioSrc);
+            audio.play().catch(console.error);
+            return;
+          }
+        } catch (e) {
+          console.warn('Cloud TTS failed, using browser fallback');
+        }
+
+        // Fallback to browser TTS
+        speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(question);
-        utterance.rate = 0.60; // Slow pace for kids
-        utterance.pitch = 1.1; // Friendly tone
+        utterance.rate = 0.60;
+        utterance.pitch = 1.1;
         speechSynthesis.speak(utterance);
-      }, 300);
+      };
 
+      const timer = setTimeout(speak, 300);
       return () => {
         clearTimeout(timer);
         speechSynthesis.cancel();

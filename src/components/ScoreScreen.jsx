@@ -36,14 +36,37 @@ const ScoreScreen = ({ score, answer, feedback, onPlayAgain }) => {
   // Speak the feedback aloud
   useEffect(() => {
     if (feedback) {
-      // Wait a moment for sound effects, then speak
-      const timer = setTimeout(() => {
-        const utterance = new SpeechSynthesisUtterance(feedback);
-        utterance.rate = 0.60; // Slow pace for kids
-        utterance.pitch = 1.1; // Slightly higher pitch for friendly tone
-        speechSynthesis.speak(utterance);
-      }, 800);
+      // Use Cloud TTS with browser fallback
+      const speak = async () => {
+        try {
+          const apiUrl = import.meta.env?.DEV ? 'http://localhost:3001/api/tts' : '/api/tts';
 
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: feedback }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
+            const audio = new Audio(audioSrc);
+            audio.play().catch(console.error);
+            return;
+          }
+        } catch (e) {
+          console.warn('Cloud TTS failed, using browser fallback');
+        }
+
+        // Fallback to browser TTS
+        const utterance = new SpeechSynthesisUtterance(feedback);
+        utterance.rate = 0.60;
+        utterance.pitch = 1.1;
+        speechSynthesis.speak(utterance);
+      };
+
+      // Wait a moment for sound effects, then speak
+      const timer = setTimeout(speak, 800);
       return () => {
         clearTimeout(timer);
         speechSynthesis.cancel();
