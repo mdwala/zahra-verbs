@@ -19,11 +19,17 @@ export default async function handler(req, res) {
 
     const { text } = req.body;
 
+    if (!TTS_API_KEY) {
+        console.error('GOOGLE_TTS_API_KEY is missing from environment variables');
+        return res.status(500).json({ error: 'Server configuration error: Missing API Key' });
+    }
+
     if (!text) {
         return res.status(400).json({ error: 'Text is required' });
     }
 
     try {
+        console.log(`Attempting TTS for text: "${text.substring(0, 20)}..."`);
         const response = await fetch(
             `https://texttospeech.googleapis.com/v1/text:synthesize?key=${TTS_API_KEY}`,
             {

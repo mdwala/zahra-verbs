@@ -15,10 +15,12 @@ export async function speakText(text) {
         });
 
         if (!response.ok) {
-            throw new Error('TTS API failed');
+            const errorText = await response.text();
+            throw new Error(`TTS API failed: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
+        console.log('Cloud TTS received audio successfully');
 
         // Create audio from base64
         const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
