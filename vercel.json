@@ -1,0 +1,5 @@
+{
+    "framework": "vite",
+    "installCommand": "npm install && cd backend && npm install",
+    "buildCommand": "npm run build"
+}

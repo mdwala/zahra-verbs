@@ -1,0 +1,21 @@
+{
+  "name": "Zahra's Language Adventure",
+  "short_name": "Language Adventure",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#242424",
+  "theme_color": "#646cff",
+  "description": "A fun game to help kids learn descriptive language.",
+  "icons": [
+    {
+      "src": "pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

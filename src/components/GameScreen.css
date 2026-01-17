@@ -1,0 +1,242 @@
+.game-screen {
+  padding: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1rem 1.5rem;
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  font-size: 2.5rem;
+  animation: avatar-bounce 2s ease-in-out infinite;
+}
+
+@keyframes avatar-bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.profile-info span:last-child {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.profile-stats {
+  text-align: right;
+  color: #fff;
+  font-weight: 600;
+}
+
+.profile-stats div {
+  font-size: 0.95rem;
+}
+
+/* Character area */
+.character-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.character-emoji {
+  font-size: 6rem;
+  animation: robot-wave 2s ease-in-out infinite;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes robot-wave {
+
+  0%,
+  100% {
+    transform: rotate(-10deg) scale(1);
+  }
+
+  50% {
+    transform: rotate(10deg) scale(1.1);
+  }
+}
+
+.question-bubble {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  animation: bubble-pop 0.5s ease-out;
+}
+
+@keyframes bubble-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.question-bubble::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-bottom: 15px solid #667eea;
+}
+
+.question-bubble p {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Transcript area */
+.transcript-area {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transcript-area p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  margin: 0;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Audio level indicator */
+.audio-level-container {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.audio-level-bar {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.audio-level-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ecdc4, #ffe66d, #ff6b6b);
+  border-radius: 5px;
+  transition: width 0.1s ease;
+}
+
+.audio-level-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+}
+
+/* Controls */
+.controls-area {
+  display: flex;
+  justify-content: center;
+}
+
+.mic-button {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  border: none;
+  border-radius: 50px;
+  padding: 1.2rem 2.5rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+  transition: all 0.3s ease;
+  animation: button-pulse 2s infinite;
+}
+
+@keyframes button-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 8px 35px rgba(78, 205, 196, 0.6);
+  }
+}
+
+.mic-button:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 35px rgba(78, 205, 196, 0.5);
+}
+
+.mic-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.mic-button.listening {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+  animation: recording-pulse 1s infinite;
+}
+
+@keyframes recording-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 15px rgba(255, 107, 107, 0);
+  }
+}
+
+.mic-button:disabled {
+  background: #666;
+  cursor: not-allowed;
+  animation: none;
+}
+
+.mic-icon {
+  font-size: 1.5rem;
+}
