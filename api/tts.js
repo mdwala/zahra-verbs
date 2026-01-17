@@ -54,9 +54,12 @@ export default async function handler(req, res) {
         );
 
         if (!response.ok) {
-            const errorData = await response.text();
-            console.error('TTS API error:', errorData);
-            throw new Error(`TTS API error: ${response.status}`);
+            const errorJson = await response.json();
+            console.error('Google TTS API Error Response:', JSON.stringify(errorJson, null, 2));
+            return res.status(response.status).json({
+                error: 'Google TTS API Error',
+                details: errorJson
+            });
         }
 
         const data = await response.json();
