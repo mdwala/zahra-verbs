@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "@google/generative-ai": "^0.24.1",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

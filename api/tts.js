@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// Google Cloud TTS API endpoint
 
 // Use separate API key for Text-to-Speech
 const TTS_API_KEY = process.env.GOOGLE_TTS_API_KEY;
