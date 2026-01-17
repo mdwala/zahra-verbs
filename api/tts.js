@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
-// Use API key for Text-to-Speech (simpler than service account for Vercel)
-const TTS_API_KEY = process.env.GEMINI_API_KEY; // Reusing Gemini key which works for Google Cloud APIs
+// Use separate API key for Text-to-Speech
+const TTS_API_KEY = process.env.GOOGLE_TTS_API_KEY;
 
 export default async function handler(req, res) {
     // Enable CORS
