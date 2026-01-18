@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './GameScreen.css';
 
-const GameScreen = ({ profile, question, onSubmitAnswer }) => {
+const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [status, setStatus] = useState("idle"); // idle, listening, processing
@@ -68,9 +68,9 @@ const GameScreen = ({ profile, question, onSubmitAnswer }) => {
     };
   }, []);
 
-  // Speak the question when it changes
+  // Speak the question when it changes (only if not loading)
   useEffect(() => {
-    if (question) {
+    if (question && !isLoading) {
       // Use Cloud TTS with browser fallback
       const speak = async () => {
         try {
@@ -92,26 +92,24 @@ const GameScreen = ({ profile, question, onSubmitAnswer }) => {
           } else {
             const errorText = await response.text();
             console.error(`Cloud TTS API Error (${response.status}):`, errorText);
+            // AI TTS is required - no fallback
+            setStatus("error");
+            setTranscript("Oops! Our voice robot is sleeping. Please check your internet and try again!");
           }
         } catch (e) {
           console.error('Cloud TTS System Error:', e);
+          // AI TTS is required - no fallback
+          setStatus("error");
+          setTranscript("Oops! Our voice robot is sleeping. Please check your internet and try again!");
         }
-
-        // Fallback to browser TTS
-        speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(question);
-        utterance.rate = 0.60;
-        utterance.pitch = 1.1;
-        speechSynthesis.speak(utterance);
       };
 
       const timer = setTimeout(speak, 300);
       return () => {
         clearTimeout(timer);
-        speechSynthesis.cancel();
       };
     }
-  }, [question]);
+  }, [question, isLoading]);
 
   const startListening = async () => {
     // Check if speech recognition is supported
@@ -234,6 +232,8 @@ const GameScreen = ({ profile, question, onSubmitAnswer }) => {
         <div className="profile-info">
           <span className="avatar">{profile.avatar}</span>
           <span>{profile.name}</span>
+          <span className="age-badge">{profile.age} yrs</span>
+          {profile.lexileLevel && <span className="lexile-badge">{profile.lexileLevel}L</span>}
         </div>
         <div className="profile-stats">
           <div>Level: {profile.level}</div>
@@ -242,7 +242,7 @@ const GameScreen = ({ profile, question, onSubmitAnswer }) => {
       </div>
 
       <div className="character-area">
-        <div className="character-emoji">🤖</div>
+        <div className={`character-emoji ${isLoading ? 'thinking' : ''}`}>🤖</div>
         <div className="question-bubble">
           <p>{question}</p>
         </div>

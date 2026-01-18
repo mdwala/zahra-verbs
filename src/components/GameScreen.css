@@ -240,3 +240,39 @@
 .mic-icon {
   font-size: 1.5rem;
 }
+
+/* Age badge */
+.age-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+}
+
+/* Lexile badge */
+.lexile-badge {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  padding: 0.25rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  margin-left: 0.25rem;
+}
+
+/* Thinking animation when loading */
+.character-emoji.thinking {
+  animation: thinking-bounce 0.5s ease-in-out infinite;
+}
+
+@keyframes thinking-bounce {
+
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  50% {
+    transform: rotate(0deg) scale(1.15);
+  }
+}

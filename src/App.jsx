@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import ProfileSelector from './components/ProfileSelector';
+import ProfileEditor from './components/ProfileEditor';
 import GameScreen from './components/GameScreen';
 import ScoreScreen from './components/ScoreScreen';
 import './components/ProfileSelector.css';
+import './components/ProfileEditor.css';
 import './components/GameScreen.css';
 import './components/ScoreScreen.css';
 
-const API_URL = 'http://localhost:3001/api/evaluate';
 const PROFILES_KEY = 'zahra-verbs-profiles';
 const POINTS_PER_LEVEL = 100;
 
@@ -27,54 +28,107 @@ function App() {
   const [gameState, setGameState] = useState('profile'); // 'profile', 'game', 'score'
   const [profiles, setProfiles] = useState([]);
   const [currentProfile, setCurrentProfile] = useState(null);
+  const [editingProfile, setEditingProfile] = useState(null);
 
   const [lastScore, setLastScore] = useState(0);
   const [lastAnswer, setLastAnswer] = useState("");
   const [feedback, setFeedback] = useState("");
+
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
+
+  // Helper to suggest lexile level based on age
+  const suggestLexileFromAge = (age) => {
+    if (age <= 4) return 200;
+    if (age <= 5) return 300;
+    if (age <= 6) return 400;
+    if (age <= 7) return 500;
+    if (age <= 8) return 600;
+    if (age <= 9) return 700;
+    if (age <= 10) return 800;
+    if (age <= 11) return 900;
+    return 1000;
+  };
 
   // Load profiles from storage on initial render
   useEffect(() => {
     let savedProfiles = getProfilesFromStorage();
     if (!savedProfiles) {
       savedProfiles = [
-        { id: 1, name: 'Zahra', avatar: '👧', score: 0, level: 1 },
-        { id: 2, name: 'Alya', avatar: '👶', score: 0, level: 1 },
+        { id: 1, name: 'Zahra', avatar: '👧', score: 0, level: 1, age: 6, lexileLevel: 400 },
+        { id: 2, name: 'Alya', avatar: '👶', score: 0, level: 1, age: 4, lexileLevel: 200 },
       ];
       saveProfilesToStorage(savedProfiles);
     }
+    // Migrate old profiles without age or lexileLevel
+    savedProfiles = savedProfiles.map(p => ({
+      ...p,
+      age: p.age || 6,
+      lexileLevel: p.lexileLevel || suggestLexileFromAge(p.age || 6)
+    }));
     setProfiles(savedProfiles);
   }, []);
 
-  // Pool of fun questions for kids
-  const questions = [
-    "What was the most interesting thing you saw today?",
-    "Describe your favorite toy and why you love it!",
-    "What would you do if you could fly like a bird?",
-    "Tell me about your best friend and what makes them special!",
-    "What's your favorite food and how does it taste?",
-    "If you had a superpower, what would it be?",
-    "Describe the funniest thing that ever happened to you!",
-    "What do you want to be when you grow up and why?",
-    "Tell me about a dream you had recently!",
-    "What's your favorite animal and what does it look like?",
-    "Describe a place you'd love to visit someday!",
-    "What makes you really happy?",
-  ];
+  // Fetch AI-generated question based on lexile level
+  const fetchQuestion = async (lexileLevel, age) => {
+    setIsLoadingQuestion(true);
+    setCurrentQuestion("");
+    try {
+      const apiUrl = import.meta.env.DEV
+        ? `http://localhost:3001/api/generate-question`
+        : `/api/generate-question`;
 
-  const [currentQuestion, setCurrentQuestion] = useState(
-    questions[Math.floor(Math.random() * questions.length)]
-  );
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lexileLevel, age }),
+      });
 
-  const handleProfileSelect = (profile) => {
-    setCurrentProfile(profile);
-    setCurrentQuestion(questions[Math.floor(Math.random() * questions.length)]);
-    setGameState('game');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate question');
+      }
+
+      const data = await response.json();
+      setCurrentQuestion(data.question);
+    } catch (error) {
+      console.error("Error fetching question:", error);
+      setFeedback("Oops! Our robot helper is taking a nap. Please try again!");
+      setLastScore(0);
+      setGameState('score');
+    } finally {
+      setIsLoadingQuestion(false);
+    }
   };
 
-  const handlePlayAgain = () => {
-    // Pick a new random question
-    setCurrentQuestion(questions[Math.floor(Math.random() * questions.length)]);
+  const handleProfileSelect = async (profile) => {
+    setCurrentProfile(profile);
     setGameState('game');
+    await fetchQuestion(profile.lexileLevel || 400, profile.age);
+  };
+
+  const handleEditProfile = (profile) => {
+    setEditingProfile(profile);
+  };
+
+  const handleSaveProfile = (updatedProfile) => {
+    const updatedProfiles = profiles.map(p =>
+      p.id === updatedProfile.id ? updatedProfile : p
+    );
+    setProfiles(updatedProfiles);
+    saveProfilesToStorage(updatedProfiles);
+    setEditingProfile(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProfile(null);
+  };
+
+  const handlePlayAgain = async () => {
+    if (currentProfile) {
+      setGameState('game');
+      await fetchQuestion(currentProfile.lexileLevel || 400, currentProfile.age);
+    }
   };
 
   const handleSwitchUser = () => {
@@ -85,8 +139,10 @@ function App() {
   const handleSubmitAnswer = async (transcript) => {
     console.log("handleSubmitAnswer called with:", transcript);
     try {
-      // Use relative URL for Vercel, absolute for local development
-      const apiUrl = import.meta.env.DEV ? 'http://localhost:3001/api/evaluate' : '/api/evaluate';
+      const apiUrl = import.meta.env.DEV
+        ? 'http://localhost:3001/api/evaluate'
+        : '/api/evaluate';
+
       console.log("Sending to API:", apiUrl);
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -96,6 +152,8 @@ function App() {
         body: JSON.stringify({
           question: currentQuestion,
           answer: transcript,
+          age: currentProfile?.age || 6,
+          lexileLevel: currentProfile?.lexileLevel || 400,
         }),
       });
 
@@ -131,8 +189,8 @@ function App() {
       setGameState('score');
     } catch (error) {
       console.error("Error submitting answer:", error);
-      setFeedback(error.message || "Error processing your answer. Please try again.");
-      setLastScore(0); // Ensure score is 0 on error
+      setFeedback("Oops! Our robot helper is taking a nap. Please try again!");
+      setLastScore(0);
       setGameState('score');
     }
   };
@@ -140,14 +198,21 @@ function App() {
   const renderGameState = () => {
     switch (gameState) {
       case 'profile':
-        return <ProfileSelector profiles={profiles} onProfileSelect={handleProfileSelect} />;
+        return (
+          <ProfileSelector
+            profiles={profiles}
+            onProfileSelect={handleProfileSelect}
+            onEditProfile={handleEditProfile}
+          />
+        );
       case 'game':
         return (
           <div>
             <GameScreen
               profile={currentProfile}
-              question={currentQuestion}
+              question={isLoadingQuestion ? "Let me think of a good question..." : currentQuestion}
               onSubmitAnswer={handleSubmitAnswer}
+              isLoading={isLoadingQuestion}
             />
             <button style={{ marginTop: '1rem', backgroundColor: '#555' }} onClick={handleSwitchUser}>Switch User</button>
           </div>
@@ -155,7 +220,7 @@ function App() {
       case 'score':
         return <ScoreScreen score={lastScore} answer={lastAnswer} feedback={feedback} onPlayAgain={handlePlayAgain} />;
       default:
-        return <ProfileSelector profiles={profiles} onProfileSelect={handleProfileSelect} />;
+        return <ProfileSelector profiles={profiles} onProfileSelect={handleProfileSelect} onEditProfile={handleEditProfile} />;
     }
   }
 
@@ -165,6 +230,15 @@ function App() {
       <main>
         {renderGameState()}
       </main>
+
+      {/* Profile Editor Modal */}
+      {editingProfile && (
+        <ProfileEditor
+          profile={editingProfile}
+          onSave={handleSaveProfile}
+          onCancel={handleCancelEdit}
+        />
+      )}
     </div>
   )
 }

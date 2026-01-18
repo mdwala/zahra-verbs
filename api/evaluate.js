@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// API Key - In production, use environment variable GEMINI_API_KEY
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyDEDfIwZ-jDiq9tByrAtgPjwAaPTXmU9Sg";
+// API Key - Use environment variable only, no hardcoded key
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -32,28 +32,57 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { question, answer } = req.body;
+    const { question, answer, age, lexileLevel } = req.body;
+    const childAge = age || 6;
+    const childLexile = lexileLevel || 400;
 
     if (!question || !answer) {
         return res.status(400).json({ error: 'Question and answer are required.' });
     }
 
+    if (!GEMINI_API_KEY) {
+        console.error('GEMINI_API_KEY is missing from environment variables');
+        return res.status(500).json({
+            error: 'Oops! Our robot helper is taking a nap. Please try again later!'
+        });
+    }
+
     try {
         const prompt = `
-      You are an AI language coach for a young child.
-      The child was asked: "${question}"
-      The child answered: "${answer}"
-      
-      Please evaluate the answer based on the following criteria:
-      1.  **Vocabulary Richness:** Are they using simple words or more descriptive ones?
-      2.  **Creativity:** Is the answer original or just a basic response?
-      
-      Return a JSON object with two keys:
-      - "score": An integer from 1 to 10, where 1 is a very basic answer and 10 is exceptionally creative and descriptive.
-      - "feedback": A short, one-sentence, encouraging piece of feedback for the child.
+You are a friendly, encouraging AI language coach for a ${childAge}-year-old child with a reading level of ${childLexile}L (Lexile measure).
 
-      Example response: {"score": 8, "feedback": "Wow, 'deliciously creamy' is a fantastic way to describe it!"}
-    `;
+The child was asked: "${question}"
+The child answered: "${answer}"
+
+Please evaluate the answer based on their ${childLexile}L Lexile level:
+
+For Lexile ${childLexile}L, evaluate based on:
+1. **Vocabulary Richness:** Are they using words appropriate for their reading level? For ${childLexile}L, expect:
+   ${childLexile <= 200 ? '- Simple words like: big, red, happy, fun' : ''}
+   ${childLexile > 200 && childLexile <= 400 ? '- Basic descriptive words like: excited, colorful, friendly' : ''}
+   ${childLexile > 400 && childLexile <= 600 ? '- Intermediate vocabulary like: adventurous, creative, discover' : ''}
+   ${childLexile > 600 && childLexile <= 800 ? '- More sophisticated words like: fascinating, challenging, perspective' : ''}
+   ${childLexile > 800 ? '- Advanced vocabulary like: exemplary, innovative, contemplative' : ''}
+
+2. **Creativity:** Is the answer original and imaginative?
+3. **Expression:** Did they explain their thoughts clearly?
+
+IMPORTANT: Your feedback should:
+- Be age-appropriate in TONE for a ${childAge}-year-old (use simple, friendly language)
+- Suggest vocabulary improvements matching their ${childLexile}L level
+- Be encouraging and specific about what was good
+- If the answer was short, gently encourage them to say more next time
+- Include an emoji to make it fun!
+
+Return a JSON object with two keys:
+- "score": An integer from 1 to 10, where 1 is very basic and 10 is exceptionally creative for their level
+- "feedback": A short, one-sentence, encouraging piece of feedback with a vocabulary suggestion
+
+Example responses by Lexile level:
+- For 200L: {"score": 7, "feedback": "Wow, you used the word 'happy'! 🌟 Next time, try saying 'super happy' or 'excited'!"}
+- For 500L: {"score": 8, "feedback": "Great description! 🎨 Try using a word like 'fascinating' to make it even more interesting!"}
+- For 800L: {"score": 6, "feedback": "Solid answer! 💡 Consider using words like 'remarkable' or 'innovative' to express your ideas!"}
+`;
 
         const response = await callGeminiApi(prompt);
         return res.status(200).json(response);
@@ -61,13 +90,9 @@ export default async function handler(req, res) {
     } catch (error) {
         console.error('Error calling Gemini API:', error);
 
-        // Fallback scoring
-        const wordCount = answer.split(/\s+/).filter(w => w.length > 0).length;
-        const fallbackScore = Math.min(10, Math.max(3, wordCount));
-
-        return res.status(200).json({
-            score: fallbackScore,
-            feedback: `Good effort! You used ${wordCount} words! (Offline Mode)`
+        // NO OFFLINE FALLBACK - Return error so user knows AI is required
+        return res.status(500).json({
+            error: 'Oops! Our robot helper is taking a nap. Please try again!'
         });
     }
 }
