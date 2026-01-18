@@ -75,9 +75,7 @@ function App() {
     setIsLoadingQuestion(true);
     setCurrentQuestion("");
     try {
-      const apiUrl = import.meta.env.DEV
-        ? `http://localhost:3001/api/generate-question`
-        : `/api/generate-question`;
+      const apiUrl = '/api/generate-question';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -140,9 +138,7 @@ function App() {
   const handleSubmitAnswer = async (transcript) => {
     console.log("handleSubmitAnswer called with:", transcript);
     try {
-      const apiUrl = import.meta.env.DEV
-        ? 'http://localhost:3001/api/evaluate'
-        : '/api/evaluate';
+      const apiUrl = '/api/evaluate';
 
       console.log("Sending to API:", apiUrl);
       const response = await fetch(apiUrl, {

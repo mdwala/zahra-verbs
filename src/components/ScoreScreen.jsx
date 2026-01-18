@@ -39,7 +39,7 @@ const ScoreScreen = ({ score, answer, feedback, onPlayAgain }) => {
       // Use Cloud TTS with browser fallback
       const speak = async () => {
         try {
-          const apiUrl = import.meta.env?.DEV ? 'http://localhost:3001/api/tts' : '/api/tts';
+          const apiUrl = '/api/tts';
 
           const response = await fetch(apiUrl, {
             method: 'POST',

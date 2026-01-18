@@ -41,7 +41,10 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
     recognition.onaudiostart = () => addDebugLog("🔊 Sound detected");
     recognition.onspeechstart = () => addDebugLog("🗣️ Speech started");
     recognition.onspeechend = () => addDebugLog("🤫 Speech ended");
-    recognition.onnomatch = () => addDebugLog("🤷 No match");
+    recognition.onnomatch = () => {
+      addDebugLog("🤷 No match");
+      setTranscript("I heard noise but no words. Try gettting closer?");
+    };
 
     recognition.onresult = (event) => {
 
@@ -90,8 +93,8 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
       // Use Cloud TTS with browser fallback
       const speak = async () => {
         try {
-          // Determine API URL based on environment
-          const apiUrl = import.meta.env?.DEV ? 'http://localhost:3001/api/tts' : '/api/tts';
+          // Use relative path - Vite proxy handles this in dev, Vercel in prod
+          const apiUrl = '/api/tts';
 
           const response = await fetch(apiUrl, {
             method: 'POST',
@@ -106,7 +109,6 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
             try {
               const audioContext = new (window.AudioContext || window.webkitAudioContext)();
               audioContextRef.current = audioContext; // Store ref to close it later
-
 
               // Decode base64 to array buffer
               const binaryString = window.atob(data.audioContent);
