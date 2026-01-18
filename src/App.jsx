@@ -242,11 +242,18 @@ function App() {
       )}
       <footer style={{
         position: 'fixed',
-        bottom: 5,
+        bottom: 10,
         right: 10,
-        fontSize: '0.8rem',
-        opacity: 0.5,
-        color: '#ccc'
+        fontSize: '1.2rem',
+        fontWeight: 'bold',
+        opacity: 1,
+        color: '#fff',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: '5px 12px',
+        borderRadius: '8px',
+        zIndex: 9999,
+        pointerEvents: 'none',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
       }}>
         v{version}
       </footer>

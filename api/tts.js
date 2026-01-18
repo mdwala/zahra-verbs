@@ -51,7 +51,7 @@ export default async function handler(req, res) {
                         audioEncoding: 'MP3',
                         speakingRate: 0.85, // Slightly slower for kids
                         pitch: 2.0, // Warmer, friendlier tone
-                        volumeGainDb: 10.0, // Increase volume
+                        volumeGainDb: 16.0, // Maximum volume
                     },
                 }),
             }
