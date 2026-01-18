@@ -49,9 +49,39 @@ const ScoreScreen = ({ score, answer, feedback, onPlayAgain }) => {
 
           if (response.ok) {
             const data = await response.json();
-            const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
-            const audio = new Audio(audioSrc);
-            audio.play().catch(console.error);
+
+            // --- Web Audio API for Volume Boost ---
+            try {
+              const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+              // Decode base64 to array buffer
+              const binaryString = window.atob(data.audioContent);
+              const len = binaryString.length;
+              const bytes = new Uint8Array(len);
+              for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+
+              const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+
+              // Create Gain Node (Volume Boost)
+              const gainNode = audioContext.createGain();
+              gainNode.gain.value = 2.0; // 200% Volume (Double the original)
+
+              const source = audioContext.createBufferSource();
+              source.buffer = audioBuffer;
+
+              // Connect: Source -> Gain -> Speakers
+              source.connect(gainNode);
+              gainNode.connect(audioContext.destination);
+
+              source.start(0);
+            } catch (audioError) {
+              console.error("Web Audio API Error, falling back to standard audio:", audioError);
+              const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
+              const audio = new Audio(audioSrc);
+              audio.play().catch(console.error);
+            }
             return;
           } else {
             const errorText = await response.text();
@@ -61,10 +91,11 @@ const ScoreScreen = ({ score, answer, feedback, onPlayAgain }) => {
           console.error('Cloud TTS System Error:', e);
         }
 
-        // Fallback to browser TTS
+        // Fallback to browser TTS (if everything fails)
         const utterance = new SpeechSynthesisUtterance(feedback);
         utterance.rate = 0.60;
         utterance.pitch = 1.1;
+        // Browser TTS doesn't support gain > 1.0 reliably across browsers
         speechSynthesis.speak(utterance);
       };
 
