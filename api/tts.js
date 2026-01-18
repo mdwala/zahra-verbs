@@ -28,8 +28,11 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Text is required' });
     }
 
+    // Strip emojis from text to prevent TTS from reading them
+    const cleanText = text.replace(/[\u{1F600}-\u{1F6FF}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+
     try {
-        console.log(`Attempting TTS for text: "${text.substring(0, 20)}..."`);
+        console.log(`Attempting TTS for text: "${cleanText.substring(0, 20)}..."`);
         const response = await fetch(
             `https://texttospeech.googleapis.com/v1/text:synthesize?key=${TTS_API_KEY}`,
             {
@@ -38,7 +41,7 @@ export default async function handler(req, res) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    input: { text },
+                    input: { text: cleanText },
                     voice: {
                         languageCode: 'en-US',
                         name: 'en-US-Wavenet-F', // Friendly female WaveNet voice

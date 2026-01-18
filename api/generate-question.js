@@ -54,11 +54,13 @@ export default async function handler(req, res) {
         ];
         // Pick a random topic
         const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+        const randomSeed = Math.floor(Math.random() * 999999);
 
         const prompt = `
 You are creating a simple, fun question for a ${childAge}-year-old child with a ${childLexile}L Lexile reading level.
 
 TOPIC: ${randomTopic} (The question MUST be about this topic)
+RANDOM SEED: ${randomSeed} (Use this number to generate a COMPLETELY UNIQUE question. Do not repeat previous questions.)
 
 CRITICAL RULES - YOU MUST FOLLOW:
 1. Ask ONE simple question only - NO multi-part questions!
