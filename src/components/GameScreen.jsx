@@ -5,6 +5,8 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [status, setStatus] = useState("idle"); // idle, listening, processing
+  const [debugLog, setDebugLog] = useState([]); // Visual debug log
+
   const hasSpokenRef = useRef(false);
   const recognitionRef = useRef(null);
   const transcriptRef = useRef(""); // Keep track of transcript in ref to avoid stale closures
@@ -23,15 +25,26 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
     const recognition = new SpeechRecognition();
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     recognition.continuous = !isMobile; // Mobile works better with short bursts
-    recognition.interimResults = true;
+    recognition.interimResults = !isMobile; // Disable interim on mobile for stability
     recognition.lang = 'en-US';
 
+    const addDebugLog = (msg) => {
+      console.log(msg);
+      setDebugLog(prev => [...prev.slice(-2), msg]);
+    };
+
     recognition.onstart = () => {
-      console.log("🎤 Recognition started");
+      addDebugLog("🎤 Started");
       setStatus("listening");
     };
 
+    recognition.onaudiostart = () => addDebugLog("🔊 Sound detected");
+    recognition.onspeechstart = () => addDebugLog("🗣️ Speech started");
+    recognition.onspeechend = () => addDebugLog("🤫 Speech ended");
+    recognition.onnomatch = () => addDebugLog("🤷 No match");
+
     recognition.onresult = (event) => {
+
       let fullTranscript = "";
 
       // Build the complete transcript from all results
@@ -45,6 +58,7 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
     };
 
     recognition.onerror = (event) => {
+      addDebugLog(`❌ Error: ${event.error}`);
       console.error("❌ Recognition error:", event.error);
       if (event.error !== 'aborted') {
         setStatus("idle");
@@ -160,6 +174,8 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
       if (audioContextRef.current) {
         await audioContextRef.current.close();
         audioContextRef.current = null;
+        // Safety delay for mobile audio hardware to switch modes
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -175,7 +191,7 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
       const recognition = new SpeechRecognition();
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       recognition.continuous = !isMobile;
-      recognition.interimResults = true;
+      recognition.interimResults = !isMobile;
       recognition.lang = 'en-US';
 
       recognition.onstart = () => {
@@ -310,6 +326,9 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
         <p>
           {transcript || (isListening ? "🎤 Listening... Speak now!" : "Your answer will appear here.")}
         </p>
+        <div style={{ fontSize: '0.7rem', color: '#888', marginTop: '5px', minHeight: '1.2em' }}>
+          {debugLog.map((log, i) => <span key={i} style={{ marginRight: '5px' }}>{log}</span>)}
+        </div>
       </div>
 
       <div className="controls-area">
