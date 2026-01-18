@@ -44,40 +44,50 @@ export default async function handler(req, res) {
     }
 
     try {
+        const topics = [
+            'Space & Stars', 'Dinosaurs', 'Daily Routine', 'Family',
+            'Friends', 'Favorite Foods', 'Dreams & Imagination', 'Superpowers',
+            'School', 'Sports & Games', 'Nature & Trees', 'Colors & Art',
+            'Emotions', 'Holidays', 'Inventions', 'The Ocean',
+            'Music & Dancing', 'Books & Stories', 'Weather', 'Travel',
+            'Animals' // Keep animals but as just one option
+        ];
+        // Pick a random topic
+        const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+
         const prompt = `
 You are creating a simple, fun question for a ${childAge}-year-old child with a ${childLexile}L Lexile reading level.
+
+TOPIC: ${randomTopic} (The question MUST be about this topic)
 
 CRITICAL RULES - YOU MUST FOLLOW:
 1. Ask ONE simple question only - NO multi-part questions!
 2. Keep the question SHORT and appropriate for the reading level
+3. Make it engaging for a child!
 
 ${childLexile < 300 ? `
 LEXILE 100-300 (Beginning Reader - Age ${childAge}):
 - Maximum 8 WORDS total
 - Use only basic words a 4-year-old knows
 - Simple "What", "Who", or "Do you like" questions
-- Examples: "What is your favorite animal?", "Do you like dogs?"
 ` : ''}
 ${childLexile >= 300 && childLexile < 500 ? `
 LEXILE 300-500 (Early Reader - Age ${childAge}):
 - Maximum 12 WORDS total
 - Use simple everyday words
 - One simple question about preferences or experiences
-- Examples: "What do you like to eat for breakfast?", "Tell me about your pet!"
 ` : ''}
 ${childLexile >= 500 && childLexile < 700 ? `
 LEXILE 500-700 (Growing Reader - Age ${childAge}):
 - Maximum 15 WORDS total
 - Simple but engaging questions
 - Can ask about imagination or feelings
-- Examples: "What would you do on a rainy day?", "What makes you happy?"
 ` : ''}
 ${childLexile >= 700 ? `
 LEXILE 700+ (Developing Reader - Age ${childAge}):
 - Maximum 20 WORDS total
 - Can ask more thoughtful questions
 - Keep it to ONE question, not multiple parts
-- Examples: "If you could have any superpower, what would it be?", "What is the best thing about your school?"
 ` : ''}
 
 NEVER DO THIS:
