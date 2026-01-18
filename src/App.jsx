@@ -11,6 +11,7 @@ import './components/ScoreScreen.css';
 
 const PROFILES_KEY = 'zahra-verbs-profiles';
 const POINTS_PER_LEVEL = 100;
+import { version } from '../package.json';
 
 // --- LocalStorage Helper Functions ---
 const getProfilesFromStorage = () => {
@@ -239,6 +240,16 @@ function App() {
           onCancel={handleCancelEdit}
         />
       )}
+      <footer style={{
+        position: 'fixed',
+        bottom: 5,
+        right: 10,
+        fontSize: '0.8rem',
+        opacity: 0.5,
+        color: '#ccc'
+      }}>
+        v{version}
+      </footer>
     </div>
   )
 }

@@ -124,6 +124,21 @@ const ScoreScreen = ({ score, answer, feedback, onPlayAgain }) => {
     return 'Nice Try!';
   };
 
+  // Keyboard shortcut: Spacebar for Next Question
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.code === 'Space') {
+        event.preventDefault(); // Prevent scrolling
+        onPlayAgain();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onPlayAgain]);
+
   return (
     <div className="score-screen">
       {renderConfetti()}

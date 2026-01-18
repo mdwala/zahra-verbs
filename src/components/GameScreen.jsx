@@ -213,6 +213,23 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
     }
   };
 
+  // Keyboard shortcut: Spacebar to toggle mic
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.code === 'Space') {
+        event.preventDefault(); // Prevent scrolling
+        if (status !== 'error' && status !== 'processing') {
+          handleMicClick();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isListening, status]);
+
   const robotArt = `
    d_(-_-)_b
   /--o--o--\\
