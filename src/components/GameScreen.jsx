@@ -8,6 +8,7 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
   const hasSpokenRef = useRef(false);
   const recognitionRef = useRef(null);
   const transcriptRef = useRef(""); // Keep track of transcript in ref to avoid stale closures
+  const audioContextRef = useRef(null); // Ref to track Web Audio Context
 
   // Initialize speech recognition once
   useEffect(() => {
@@ -20,7 +21,8 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    recognition.continuous = !isMobile; // Mobile works better with short bursts
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
@@ -89,6 +91,8 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
             // --- Web Audio API for Volume Boost ---
             try {
               const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+              audioContextRef.current = audioContext; // Store ref to close it later
+
 
               // Decode base64 to array buffer
               const binaryString = window.atob(data.audioContent);
@@ -152,6 +156,12 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
 
     // Request microphone permission first
     try {
+      // release TTS audio if playing
+      if (audioContextRef.current) {
+        await audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+
       await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) {
       console.error("Microphone permission denied:", err);
@@ -163,7 +173,8 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
     // Create recognition if it doesn't exist
     if (!recognitionRef.current) {
       const recognition = new SpeechRecognition();
-      recognition.continuous = true;
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      recognition.continuous = !isMobile;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
 
@@ -307,6 +318,7 @@ const GameScreen = ({ profile, question, onSubmitAnswer, isLoading }) => {
           onClick={handleMicClick}
           disabled={status === "error" || status === "processing"}
           type="button"
+          style={{ touchAction: 'manipulation' }}
         >
           <span className="mic-icon">{isListening ? '🔴' : '🎤'}</span>
           {status === "error" && 'Mic not available'}
