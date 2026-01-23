@@ -11,7 +11,7 @@ const ProfileSelector = ({ profiles, onProfileSelect, onEditProfile }) => {
             <div className="profile-main" onClick={() => onProfileSelect(profile)}>
               <span className="profile-avatar">{profile.avatar}</span>
               <span className="profile-name">{profile.name}</span>
-              <span className="profile-age">{profile.age} years old</span>
+
               <span className="profile-score">⭐ {profile.score} points</span>
             </div>
             <button
