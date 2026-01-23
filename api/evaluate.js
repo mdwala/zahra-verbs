@@ -32,8 +32,8 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { question, answer, age, lexileLevel } = req.body;
-    const childAge = age || 6;
+    const { question, answer, lexileLevel } = req.body;
+    // Default to 400L if not provided
     const childLexile = lexileLevel || 400;
 
     if (!question || !answer) {
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
 
     try {
         const prompt = `
-You are a friendly, encouraging AI language coach for a ${childAge}-year-old child with a reading level of ${childLexile}L (Lexile measure).
+You are a friendly, encouraging AI language coach for a child with a reading level of ${childLexile}L (Lexile measure).
 
 The child was asked: "${question}"
 The child answered: "${answer}"
@@ -68,11 +68,15 @@ For Lexile ${childLexile}L, evaluate based on:
 3. **Expression:** Did they explain their thoughts clearly?
 
 IMPORTANT: Your feedback should:
-- Be age-appropriate in TONE for a ${childAge}-year-old (use simple, friendly language)
+- Be friendly, encouraging and consistent in tone for a child (use simple, friendly language)
 - Suggest vocabulary improvements matching their ${childLexile}L level
 - Be encouraging and specific about what was good
 - If the answer was short, gently encourage them to say more next time
 - Include an emoji to make it fun!
+
+STRICT SCORING RULES:
+- If the answer is only 1-2 words (e.g., "green", "it is big"), the MAXIMUM score is 4.
+- To get a score of 8-10, the child MUST use a full sentence or a detailed thought.
 
 Return a JSON object with two keys:
 - "score": An integer from 1 to 10, where 1 is very basic and 10 is exceptionally creative for their level

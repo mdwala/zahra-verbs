@@ -1,18 +1,7 @@
 import React, { useState } from 'react';
 import './ProfileEditor.css';
 
-// Helper to suggest lexile level based on age
-const suggestLexileFromAge = (age) => {
-    if (age <= 4) return 200;
-    if (age <= 5) return 300;
-    if (age <= 6) return 400;
-    if (age <= 7) return 500;
-    if (age <= 8) return 600;
-    if (age <= 9) return 700;
-    if (age <= 10) return 800;
-    if (age <= 11) return 900;
-    return 1000;
-};
+
 
 // Get lexile level description
 const getLexileDescription = (level) => {
@@ -25,21 +14,17 @@ const getLexileDescription = (level) => {
 
 const ProfileEditor = ({ profile, onSave, onCancel }) => {
     const [name, setName] = useState(profile?.name || '');
-    const [age, setAge] = useState(profile?.age || 6);
+    // Removed Age
     const [avatar, setAvatar] = useState(profile?.avatar || '👧');
-    const [lexileLevel, setLexileLevel] = useState(
-        profile?.lexileLevel || suggestLexileFromAge(profile?.age || 6)
-    );
+    const [lexileLevel, setLexileLevel] = useState(profile?.lexileLevel || 400);
 
     const avatarOptions = ['👧', '👦', '👶', '🧒', '🧑', '👸', '🤴', '🦸', '🧙'];
-    const ageOptions = Array.from({ length: 10 }, (_, i) => i + 3); // 3-12 years
 
     const handleSave = () => {
         if (name.trim()) {
             onSave({
                 ...profile,
                 name: name.trim(),
-                age,
                 avatar,
                 lexileLevel,
             });
@@ -62,21 +47,7 @@ const ProfileEditor = ({ profile, onSave, onCancel }) => {
                     />
                 </div>
 
-                <div className="form-group">
-                    <label>Age</label>
-                    <div className="age-selector">
-                        {ageOptions.map((a) => (
-                            <button
-                                key={a}
-                                className={`age-btn ${age === a ? 'selected' : ''}`}
-                                onClick={() => setAge(a)}
-                                type="button"
-                            >
-                                {a}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+
 
                 <div className="form-group">
                     <label>Avatar</label>

@@ -32,46 +32,35 @@ function App() {
   const [editingProfile, setEditingProfile] = useState(null);
 
   const [lastScore, setLastScore] = useState(0);
+  const [lastPoints, setLastPoints] = useState(0); // New state for scaled points
   const [lastAnswer, setLastAnswer] = useState("");
   const [feedback, setFeedback] = useState("");
 
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
 
-  // Helper to suggest lexile level based on age
-  const suggestLexileFromAge = (age) => {
-    if (age <= 4) return 200;
-    if (age <= 5) return 300;
-    if (age <= 6) return 400;
-    if (age <= 7) return 500;
-    if (age <= 8) return 600;
-    if (age <= 9) return 700;
-    if (age <= 10) return 800;
-    if (age <= 11) return 900;
-    return 1000;
-  };
+
 
   // Load profiles from storage on initial render
   useEffect(() => {
     let savedProfiles = getProfilesFromStorage();
     if (!savedProfiles) {
       savedProfiles = [
-        { id: 1, name: 'Zahra', avatar: '👧', score: 0, level: 1, age: 6, lexileLevel: 400 },
-        { id: 2, name: 'Alya', avatar: '👶', score: 0, level: 1, age: 4, lexileLevel: 200 },
+        { id: 1, name: 'Zahra', avatar: '👧', score: 0, level: 1, lexileLevel: 400 },
+        { id: 2, name: 'Alya', avatar: '👶', score: 0, level: 1, lexileLevel: 200 },
       ];
       saveProfilesToStorage(savedProfiles);
     }
-    // Migrate old profiles without age or lexileLevel
+    // Migrate old profiles
     savedProfiles = savedProfiles.map(p => ({
       ...p,
-      age: p.age || 6,
-      lexileLevel: p.lexileLevel || suggestLexileFromAge(p.age || 6)
+      lexileLevel: p.lexileLevel || 400
     }));
     setProfiles(savedProfiles);
   }, []);
 
   // Fetch AI-generated question based on lexile level
-  const fetchQuestion = async (lexileLevel, age) => {
+  const fetchQuestion = async (lexileLevel) => {
     setIsLoadingQuestion(true);
     setCurrentQuestion("");
     try {
@@ -80,7 +69,7 @@ function App() {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lexileLevel, age }),
+        body: JSON.stringify({ lexileLevel }),
       });
 
       if (!response.ok) {
@@ -103,7 +92,7 @@ function App() {
   const handleProfileSelect = async (profile) => {
     setCurrentProfile(profile);
     setGameState('game');
-    await fetchQuestion(profile.lexileLevel || 400, profile.age);
+    await fetchQuestion(profile.lexileLevel || 400);
   };
 
   const handleEditProfile = (profile) => {
@@ -126,7 +115,7 @@ function App() {
   const handlePlayAgain = async () => {
     if (currentProfile) {
       setGameState('game');
-      await fetchQuestion(currentProfile.lexileLevel || 400, currentProfile.age);
+      await fetchQuestion(currentProfile.lexileLevel || 400);
     }
   };
 
@@ -149,7 +138,6 @@ function App() {
         body: JSON.stringify({
           question: currentQuestion,
           answer: transcript,
-          age: currentProfile?.age || 6,
           lexileLevel: currentProfile?.lexileLevel || 400,
         }),
       });
@@ -162,8 +150,13 @@ function App() {
         throw new Error(data.error || "Failed to evaluate");
       }
 
-      const newScore = data.score || 0;
-      setLastScore(newScore);
+      const rawScore = data.score || 0;
+
+      // Standardized scoring: Max 20 points
+      const calculatedPoints = rawScore * 2;
+
+      setLastScore(rawScore);
+      setLastPoints(calculatedPoints);
       setLastAnswer(transcript);
       setFeedback(data.feedback || "Good job!");
 
@@ -171,7 +164,7 @@ function App() {
       if (currentProfile) {
         const updatedProfiles = profiles.map(p => {
           if (p.id === currentProfile.id) {
-            return { ...p, score: p.score + newScore };
+            return { ...p, score: p.score + calculatedPoints };
           }
           return p;
         });
@@ -180,7 +173,7 @@ function App() {
         saveProfilesToStorage(updatedProfiles);
 
         // Update current profile reference too so UI shows new score immediately if needed
-        setCurrentProfile(prev => ({ ...prev, score: prev.score + newScore }));
+        setCurrentProfile(prev => ({ ...prev, score: prev.score + calculatedPoints }));
       }
 
       setGameState('score');
@@ -188,6 +181,7 @@ function App() {
       console.error("Error submitting answer:", error);
       setFeedback("Oops! Our robot helper is taking a nap. Please try again!");
       setLastScore(0);
+      setLastPoints(0);
       setGameState('score');
     }
   };
@@ -215,7 +209,7 @@ function App() {
           </div>
         );
       case 'score':
-        return <ScoreScreen score={lastScore} answer={lastAnswer} feedback={feedback} onPlayAgain={handlePlayAgain} />;
+        return <ScoreScreen score={lastScore} points={lastPoints} answer={lastAnswer} feedback={feedback} onPlayAgain={handlePlayAgain} />;
       default:
         return <ProfileSelector profiles={profiles} onProfileSelect={handleProfileSelect} onEditProfile={handleEditProfile} />;
     }

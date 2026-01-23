@@ -32,8 +32,8 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { age, lexileLevel } = req.body;
-    const childAge = age || 6;
+    const { lexileLevel } = req.body;
+    // Default to 400L if not provided
     const childLexile = lexileLevel || 400;
 
     if (!GEMINI_API_KEY) {
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
         const randomSeed = Math.floor(Math.random() * 999999);
 
         const prompt = `
-You are creating a simple, fun question for a ${childAge}-year-old child with a ${childLexile}L Lexile reading level.
+You are creating a simple, fun question for a child with a ${childLexile}L Lexile reading level.
 
 TOPIC: ${randomTopic} (The question MUST be about this topic)
 RANDOM SEED: ${randomSeed} (Use this number to generate a COMPLETELY UNIQUE question. Do not repeat previous questions.)
@@ -68,34 +68,42 @@ CRITICAL RULES - YOU MUST FOLLOW:
 3. Make it engaging for a child!
 
 ${childLexile < 300 ? `
-LEXILE 100-300 (Beginning Reader - Age ${childAge}):
+LEXILE 100-300 (Beginning Reader):
 - Maximum 8 WORDS total
 - Use only basic words a 4-year-old knows
 - Simple "What", "Who", or "Do you like" questions
 ` : ''}
 ${childLexile >= 300 && childLexile < 500 ? `
-LEXILE 300-500 (Early Reader - Age ${childAge}):
+LEXILE 300-500 (Early Reader):
 - Maximum 12 WORDS total
 - Use simple everyday words
 - One simple question about preferences or experiences
 ` : ''}
 ${childLexile >= 500 && childLexile < 700 ? `
-LEXILE 500-700 (Growing Reader - Age ${childAge}):
+LEXILE 500-700 (Growing Reader):
 - Maximum 15 WORDS total
 - Simple but engaging questions
 - Can ask about imagination or feelings
 ` : ''}
-${childLexile >= 700 ? `
-LEXILE 700+ (Developing Reader - Age ${childAge}):
+${childLexile >= 700 && childLexile < 900 ? `
+LEXILE 700-900 (Developing Reader):
 - Maximum 20 WORDS total
-- Can ask more thoughtful questions
-- Keep it to ONE question, not multiple parts
+- somewhat complex sentence structure (can use clauses)
+- Use descriptive vocabulary (e.g., instead of "big", use "enormous" or "gigantic")
+- Ask "Why" or "How" questions that require a thought
+` : ''}
+${childLexile >= 900 ? `
+LEXILE 900+ (Advanced Reader):
+- Maximum 25 WORDS total
+- Use sophisticated vocabulary appropriate for the level
+- Ask questions that require inference or critical thinking
+- Can use metaphors or more abstract concepts
 ` : ''}
 
 NEVER DO THIS:
-- No questions longer than 20 words
+- No questions longer than 30 words
 - No multi-part questions (no "and also" or multiple questions)
-- No complex scenarios with many details
+- No complex scenarios with many details (keep it focused)
 - No questions asking to "describe" multiple things at once
 
 Return ONLY: {"question": "Your short question here"}

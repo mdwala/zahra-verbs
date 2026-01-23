@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import './ScoreScreen.css';
 
-const ScoreScreen = ({ score, answer, feedback, onPlayAgain }) => {
+const ScoreScreen = ({ score, points, answer, feedback, onPlayAgain }) => {
   const audioRef = useRef(null);
 
   // Play celebration sound on mount
@@ -135,6 +135,7 @@ const ScoreScreen = ({ score, answer, feedback, onPlayAgain }) => {
         left: `${10 + Math.random() * 80}%`,
         top: `${10 + Math.random() * 80}%`,
         animationDelay: `${Math.random() * 2}s`,
+        backgroundColor: 'gold',
       };
       stars.push(<div key={i} className="floating-star" style={style}>⭐</div>);
     }
@@ -181,7 +182,7 @@ const ScoreScreen = ({ score, answer, feedback, onPlayAgain }) => {
 
         <div className="score-circle-container">
           <div className={`score-circle ${score >= 7 ? 'high-score' : ''}`}>
-            <span className="score-number">{score}</span>
+            <span className="score-number">{points !== undefined ? points : score}</span>
             <span className="score-label">points</span>
           </div>
         </div>
